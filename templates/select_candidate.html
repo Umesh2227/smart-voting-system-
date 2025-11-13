@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Online Voting System - Select Candidate</title>
+        <meta content="width=device-width, initial-scale=1.0" name="viewport">
+        <meta content="Free Website Template" name="keywords">
+        <meta content="Free Website Template" name="description">
+
+        <!-- Favicon -->
+        <link href="static/img/favicon.ico" rel="icon">
+
+        <!-- Google Font -->
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+        <!-- CSS Libraries -->
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+        <link href="static/lib/animate/animate.min.css" rel="stylesheet">
+        <link href="static/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+        <link href="static/lib/lightbox/css/lightbox.min.css" rel="stylesheet">
+
+        <!-- Template Stylesheet -->
+        <link href="static/css/style.css" rel="stylesheet">
+    </head>
+
+    <body style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh;">
+
+        <!-- Nav Bar Start -->
+        <div class="navbar navbar-expand-lg" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);">
+            <div class="container-fluid">
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                    <div class="navbar-nav ml-auto">
+                        <a href="{{ url_for('home') }}" class="nav-item nav-link" style="color: #fff;">Home</a>
+                        <a href="{{ url_for('admin') }}" class="nav-item nav-link" style="color: #fff;">Admin</a>
+                        <a href="{{ url_for('voting') }}" class="nav-item nav-link active" style="color: #fff; border-bottom: 2px solid #ff6b6b;">Vote</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Nav Bar End -->
+        
+        {% include '_flash.html' %}
+
+<style>
+input[type=radio] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+input[type=radio] + img {
+  cursor: pointer;
+}
+
+input[type="radio"]:checked + label {
+    outline: 2px solid #f00;
+}
+</style>
+        <center>
+        <div class="col-md-8">
+          {% block content %}{% endblock %}
+        </div>
+        </center>
+
+        <!-- Hero Start -->
+        <div style="padding: 40px 0;">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-10 offset-md-1">
+                        <div style="background: rgba(255,255,255,0.95); border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.15);">
+                                <center><h1 style="color: #333; font-weight: 700; margin-bottom: 10px;">✓ Confirm Your Vote</h1></center>
+                                <center><p style="color: #666; font-size: 16px; margin-bottom: 30px;">Review and confirm your choice below</p></center>
+                                <div style="margin-bottom: 20px;">
+                                    <form action="{{ url_for('select_candidate') }}" method="post" id="candidateForm" onsubmit="return validateCandidate()">
+                                        <div class="alert alert-info" role="alert" style="margin-bottom: 25px; border-left: 5px solid #0066cc; background: #e7f3ff; border-radius: 8px;">
+                                            <i class="fas fa-info-circle"></i> <strong>IMPORTANT:</strong> Select one candidate carefully. <strong style="color: #ff6b6b;">You can only vote once.</strong> This action is permanent.
+                                        </div>
+                                        <center><h3 style="margin-bottom: 25px; color: #333;">
+                                            <i class="fas fa-hand-pointer"></i> Click on a candidate to select:
+                                        </h3></center>
+                                        {% if noms and noms|length > 0 %}
+                                            <div id="selectedCandidate" class="alert alert-warning" style="display:none; margin-bottom: 25px; border-left: 5px solid #ff9800; background: #fff8e1;">
+                                                <strong style="color: #ff6b6b;">⚠️ Final Selection:</strong> <span id="selectedName" style="font-size: 16px; font-weight: bold; color: #333;"></span> 
+                                                <span style="color: #666; margin: 0 5px;">|</span>
+                                                <span id="selectedParty" style="font-size: 14px; color: #0066cc;"></span>
+                                            </div>
+                                            {% for i in range(0, noms|length, 3) %}
+                                                <div class="row" style="margin-bottom:30px;">
+                                                    {% for nom in noms[i:i+3] %}
+                                                        <div class="col text-center">
+                                                            <label style="cursor:pointer; padding: 15px; border-radius: 12px; transition: all 0.3s ease; display: inline-block; width: 100%;">
+                                                                <input type="radio" name="test" value="{{ nom.symbol }}" style="display:none;" onchange="updateSelectionWithAnimation('{{ nom.member }}', '{{ nom.party }}')">
+                                                                <div style="border: 4px solid #e0e0e0; padding: 20px; border-radius: 15px; transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);">
+                                                                    <div style="position: relative; margin-bottom: 12px;">
+                                                                        <img src="/static/logos/{{ nom.symbol }}" alt="{{ nom.member }}" style="width:140px; height:140px; display:block; margin:0 auto; border-radius: 60%; border: 4px solid #fff; box-shadow: 0 6px 20px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+                                                                        <div class="selection-badge" style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #27ae60, #229954); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                                                                            ✓ SELECTED
+                                                                        </div>
+                                                                    </div>
+                                                                    <div style="margin-top:15px; font-weight:700; font-size: 17px; color: #222; word-break: break-word;">{{ nom.member }}</div>
+                                                                    <div style="font-size:12px; color:#0066cc; margin-top: 8px; font-weight: 600;">{{ nom.party }}</div>
+                                                                    <div class="selection-indicator" style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #f0f0f0; font-size: 11px; color: #27ae60; font-weight: bold; display: none;">
+                                                                        <i class="fas fa-check-circle"></i> Ready to Vote
+                                                                    </div>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endfor %}
+                                            <div class="row" style="margin-top: 40px;">
+                                                <div class="col-md-10 offset-md-1">
+                                                    <input class='btn btn-lg' type="submit" value="✓ CONFIRM VOTE" style="padding: 14px 40px; font-size: 17px; font-weight: bold; background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: #fff; border: none; border-radius: 10px; box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4); transition: all 0.3s ease; width: 100%; max-width: 300px;">
+                                                    <a href="{{ url_for('voting') }}" class='btn btn-lg' style="margin-top: 10px; padding: 14px 40px; font-size: 17px; font-weight: bold; background: #f0f0f0; border: 2px solid #ddd; border-radius: 10px; color: #333; text-decoration: none; display: inline-block; width: 100%; max-width: 300px;">← Back</a>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-warning" style="border-radius: 10px; background: #fff3cd; border-left: 5px solid #ffc107;">
+                                                <strong>No nominees available at the moment.</strong> Please check back later.
+                                            </div>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hero End -->
+
+        <a href="#" class="back-to-top" style="background: rgba(102, 126, 234, 0.9);"><i class="fa fa-chevron-up"></i></a>
+
+        <!-- JavaScript Libraries -->
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+        <script src="static/lib/easing/easing.min.js"></script>
+        <script src="static/lib/owlcarousel/owl.carousel.min.js"></script>
+        <script src="static/lib/isotope/isotope.pkgd.min.js"></script>
+        <script src="static/lib/lightbox/js/lightbox.min.js"></script>
+
+        <!-- Contact Javascript File -->
+        <script src="static/mail/jqBootstrapValidation.min.js"></script>
+        <script src="static/mail/contact.js"></script>
+
+        <!-- Template Javascript -->
+        <script src="static/js/main.js"></script>
+        <script>
+            function validateCandidate() {
+                var candidateSelected = document.querySelector('input[name="test"]:checked');
+                if (!candidateSelected) {
+                    alert('⚠️ Please select a candidate before confirming your vote!');
+                    return false;
+                }
+                if (confirm('🗳️ Are you sure you want to vote for ' + document.getElementById('selectedName').innerText + '?\n\nThis action cannot be undone!')) {
+                    return true;
+                }
+                return false;
+            }
+            
+            function updateSelectionWithAnimation(member, party) {
+                // Show final selection display
+                document.getElementById('selectedCandidate').style.display = 'block';
+                document.getElementById('selectedName').innerText = member;
+                document.getElementById('selectedParty').innerText = party;
+                
+                // Scroll to selection display
+                document.getElementById('selectedCandidate').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+                // Reset all cards
+                document.querySelectorAll('label div[style*="border"]').forEach(div => {
+                    div.style.borderColor = '#e0e0e0';
+                    div.style.backgroundColor = 'linear-gradient(135deg, #ffffff 0%, #f9fafb 100%)';
+                    div.style.transform = 'scale(1)';
+                    div.querySelector('.selection-badge').style.display = 'none';
+                    div.querySelector('.selection-indicator').style.display = 'none';
+                });
+                
+                // Highlight selected card
+                var selected = document.querySelector('input[name="test"]:checked');
+                if (selected) {
+                    var parentDiv = selected.closest('label').querySelector('div[style*="border"]');
+                    if (parentDiv) {
+                        parentDiv.style.borderColor = '#27ae60';
+                        parentDiv.style.backgroundColor = '#e8f8f5';
+                        parentDiv.style.transform = 'scale(1.08)';
+                        parentDiv.style.boxShadow = '0 10px 30px rgba(39, 174, 96, 0.3)';
+                        
+                        // Show badges
+                        parentDiv.querySelector('.selection-badge').style.display = 'block';
+                        parentDiv.querySelector('.selection-indicator').style.display = 'block';
+                        
+                        // Animate image
+                        var img = parentDiv.querySelector('img');
+                        img.style.transform = 'scale(1.15) rotate(-5deg)';
+                    }
+                }
+            }
+            
+            // Keep old function name for compatibility
+            function updateSelection(member, party) {
+                updateSelectionWithAnimation(member, party);
+            }
+        </script>
+        <style>
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            @keyframes selectPulse {
+                0%, 100% {
+                    transform: scale(1.08);
+                }
+                50% {
+                    transform: scale(1.12);
+                }
+            }
+            
+            label:hover div[style*="border"] {
+                border-color: #bbb;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            }
+            
+            label:hover img {
+                transform: scale(1.1);
+            }
+        </style>
+    </body>
+</html>
